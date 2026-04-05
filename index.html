@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簡単イラスト依頼文メーカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=M+PLUS+Rounded+1c:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* === リセット === */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === 変数 === */
+:root {
+  --h-header:    52px;
+  --h-phead:     40px;
+  --blue:        #5bbddc;
+  --blue-light:  #e2f4fb;
+  --blue-mid:    #9fd8ef;
+  --blue-pale:   #f0fafd;
+  --blue-dark:   #3498ba;
+  --blue-deep:   #1a6688;
+  --pink:        #f06fa0;
+  --pink-light:  #fde6f0;
+  --white:       #ffffff;
+  --bg:          #e8f5fc;
+  --border:      #b8dff0;
+  --text:        #1c3844;
+  --text2:       #4a7890;
+  --text3:       #88b8cc;
+  --r:           10px;
+  --r-s:         7px;
+}
+
+/* === HTML / BODY === */
+html { height: 100%; }
+body {
+  height: 100%;
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* === ヘッダー（固定高さ） === */
+#hd {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--h-header);
+  background: var(--blue-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(52,152,186,.4);
+}
+
+#hd-title {
+  font-family: 'Kei Font', 'けいふぉんと', 'Klee One', cursive;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: .06em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#hd-acts { display: flex; gap: 8px; }
+
+.hbtn {
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  height: 30px;
+  padding: 0 15px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .18s;
+}
+
+.hbtn-cl { background: rgba(255,255,255,.2); color: #fff; }
+.hbtn-cl:hover { background: rgba(255,255,255,.35); }
+
+.hbtn-sv {
+  background: var(--pink);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(240,111,160,.4);
+}
+.hbtn-sv:hover {
+  background: #d8558a;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(240,111,160,.5);
+}
+
+/* === メインエリア（ヘッダー分オフセット） === */
+#wrap {
+  position: fixed;
+  top: var(--h-header);
+  left: 0; right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+/* === 左パネル（スクロール可） === */
+#pane-l {
+  width: 50%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding: 16px 14px 60px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-right: 2px solid var(--border);
+  background: var(--bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-mid) transparent;
+}
+
+/* === 右パネル（固定・内部スクロール） === */
+#pane-r {
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+}
+
+#r-head {
+  flex-shrink: 0;
+  height: var(--h-phead);
+  background: var(--blue-light);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+}
+
+#r-label {
+  font-family: 'Kei Font', 'けいふぉんと', 'Klee One', cursive;
+  font-size: 13px;
+  color: var(--blue-dark);
+  font-weight: 600;
+}
+
+#r-cnt { font-size: 11px; color: var(--text3); }
+
+#r-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-mid) transparent;
+}
+
+#preview {
+  background: var(--blue-pale);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 22px;
+  font-size: 13px;
+  line-height: 2;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 200px;
+}
+
+.p-empty {
+  color: var(--text3);
+  text-align: center;
+  padding-top: 60px;
+  line-height: 2.5;
+  font-size: 13px;
+}
+
+/* === カード === */
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  overflow: visible; /* 重要：hiddenにしない */
+  flex-shrink: 0;    /* 重要：縮まないように */
+}
+
+.ch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  background: var(--blue-light);
+  border-bottom: 1.5px solid var(--border);
+  border-radius: var(--r) var(--r) 0 0;
+}
+
+.ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.ctitle {
+  font-family: 'Kei Font', 'けいふぉんと', 'Klee One', cursive;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue-deep);
+  flex: 1;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.b-r { background: var(--pink-light); color: var(--pink); }
+.b-o { background: var(--blue-light); color: var(--blue-dark); border: 1px solid var(--border); }
+
+.cb {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* === フォームパーツ === */
+.fld { display: flex; flex-direction: column; gap: 5px; }
+
+.lbl {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: .04em;
+}
+
+input[type="text"],
+input[type="url"],
+select,
+textarea {
+  display: block;
+  width: 100%;
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--blue-pale);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-s);
+  padding: 8px 11px;
+  outline: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  line-height: 1.5;
+}
+
+input[type="text"]:focus,
+input[type="url"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(91,189,220,.2);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 68px;
+  line-height: 1.65;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a7890'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* === チップ === */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 13px;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--blue-pale);
+  color: var(--text2);
+  cursor: pointer;
+  user-select: none;
+  transition: all .14s;
+  white-space: nowrap;
+}
+
+.chip:hover { border-color: var(--blue); color: var(--blue-dark); background: var(--blue-light); }
+.chip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* === スウォッチ === */
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.sw {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2.5px solid transparent;
+  flex-shrink: 0;
+  transition: transform .16s, border-color .16s;
+  position: relative;
+}
+
+.sw:hover { transform: scale(1.18); }
+.sw.on { border-color: var(--blue-deep); transform: scale(1.1); }
+.sw.on::after {
+  content: '✓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,.55);
+}
+
+input[type="color"].sw { padding: 2px; }
+
+/* === URLリスト === */
+.url-list { display: flex; flex-direction: column; gap: 6px; }
+.url-row { display: flex; gap: 6px; align-items: center; }
+.url-row input { flex: 1; }
+
+.xbtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-s);
+  border: 1.5px solid var(--border);
+  background: var(--blue-pale);
+  color: var(--text3);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .14s;
+}
+
+.xbtn:hover { background: var(--pink-light); border-color: var(--pink); color: var(--pink); }
+
+.addbtn {
+  background: none;
+  border: none;
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue-dark);
+  cursor: pointer;
+  padding: 3px 0;
+}
+.addbtn:hover { text-decoration: underline; }
+
+/* 条件付き表示ボックス */
+.cond-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--blue-light);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-s);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* === トースト === */
+#toast {
+  position: fixed;
+  bottom: 22px; right: 22px;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-family: 'Kei Font', 'けいふぉんと', 'M PLUS Rounded 1c', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 999;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.ok { background: var(--blue-dark); }
+#toast.ng { background: var(--pink); }
+
+/* スクロールバー */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--blue-mid); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<div id="hd">
+  <div id="hd-title">簡単イラスト依頼文メーカー</div>
+  <div id="hd-acts">
+    <button class="hbtn hbtn-cl" onclick="clearAll()">🗑 クリア</button>
+    <button class="hbtn hbtn-sv" onclick="saveFile()">💾 テキストで保存</button>
+  </div>
+</div>
+
+<!-- メインラッパー -->
+<div id="wrap">
+
+  <!-- ▼ 左：フォーム（スクロール可） -->
+  <div id="pane-l">
+
+    <!-- 挨拶文 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">✉️</div>
+        <span class="ctitle">挨拶・送信者情報</span>
+        <span class="badge b-r">必須</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">お名前</span>
+          <input type="text" id="my-name" oninput="upd()">
+        </div>
+        <div class="fld">
+          <span class="lbl">所属（サークル名・活動名など、なければ空欄）</span>
+          <input type="text" id="my-org" oninput="upd()">
+        </div>
+      </div>
+    </div>
+
+    <!-- キャラクターの詳細 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">🎀</div>
+        <span class="ctitle">キャラクターの詳細</span>
+        <span class="badge b-r">必須</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">名前</span>
+          <input type="text" id="c-name" oninput="upd()">
+        </div>
+        <div class="row2">
+          <div class="fld">
+            <span class="lbl">性別</span>
+            <input type="text" id="c-gender" oninput="upd()">
+          </div>
+          <div class="fld">
+            <span class="lbl">年齢</span>
+            <input type="text" id="c-age" oninput="upd()">
+          </div>
+        </div>
+        <div class="fld">
+          <span class="lbl">設定・外見・性格など</span>
+          <textarea id="c-desc" oninput="upd()"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 使用用途 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">📌</div>
+        <span class="ctitle">使用用途</span>
+        <span class="badge b-r">必須</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">用途（複数OK）</span>
+          <div class="chips">
+            <div class="chip" data-v="SNSアイコン" onclick="tog(this,'use',true)">SNSアイコン</div>
+            <div class="chip" data-v="サムネイル" onclick="tog(this,'use',true)">サムネイル</div>
+            <div class="chip" data-v="グッズ制作" onclick="tog(this,'use',true)">グッズ制作</div>
+            <div class="chip" data-v="個人使用" onclick="tog(this,'use',true)">個人使用</div>
+            <div class="chip" data-v="商業利用" onclick="tog(this,'use',true)">商業利用</div>
+            <div class="chip" data-v="同人活動" onclick="tog(this,'use',true)">同人活動</div>
+            <div class="chip" data-v="創作・二次創作" onclick="tog(this,'use',true)">創作・二次創作</div>
+            <div class="chip" data-v="ゲーム素材" onclick="tog(this,'use',true)">ゲーム素材</div>
+          </div>
+        </div>
+        <div class="fld">
+          <span class="lbl">用途の補足</span>
+          <textarea id="use-note" oninput="upd()" style="min-height:54px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- イラスト構図 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">🖼️</div>
+        <span class="ctitle">イラスト構図</span>
+        <span class="badge b-r">必須</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">カット種別</span>
+          <div class="chips">
+            <div class="chip" data-v="バストアップ" onclick="tog(this,'cut')">バストアップ</div>
+            <div class="chip" data-v="全身" onclick="tog(this,'cut')">全身</div>
+            <div class="chip" data-v="ミニキャラ" onclick="tog(this,'cut')">ミニキャラ</div>
+          </div>
+        </div>
+        <!-- ポーズの指定：あり/なし -->
+        <div class="fld">
+          <span class="lbl">ポーズの指定</span>
+          <div class="chips">
+            <div class="chip" data-v="なし" onclick="togCond(this,'pose','pose-detail')">なし</div>
+            <div class="chip" data-v="あり" onclick="togCond(this,'pose','pose-detail')">あり</div>
+          </div>
+          <div id="pose-detail" class="cond-box" style="display:none;">
+            <span class="lbl" style="margin-top:8px;">ポーズの内容</span>
+            <textarea id="p-detail" oninput="upd()" style="min-height:54px;"></textarea>
+          </div>
+        </div>
+
+        <!-- 衣装指定：あり/なし -->
+        <div class="fld">
+          <span class="lbl">衣装指定</span>
+          <div class="chips">
+            <div class="chip" data-v="なし" onclick="togCond(this,'costume','costume-detail')">なし</div>
+            <div class="chip" data-v="あり" onclick="togCond(this,'costume','costume-detail')">あり</div>
+          </div>
+          <div id="costume-detail" class="cond-box" style="display:none;">
+            <span class="lbl" style="margin-top:8px;">衣装の内容</span>
+            <textarea id="p-costume" oninput="upd()" style="min-height:54px;"></textarea>
+          </div>
+        </div>
+
+        <!-- 表情差分：あり/なし → ありのとき詳細欄を表示 -->
+        <div class="fld">
+          <span class="lbl">表情差分</span>
+          <div class="chips">
+            <div class="chip" data-v="なし" onclick="togCond(this,'diff','diff-detail')">なし</div>
+            <div class="chip" data-v="あり" onclick="togCond(this,'diff','diff-detail')">あり</div>
+          </div>
+          <div id="diff-detail" class="cond-box" style="display:none;">
+            <span class="lbl" style="margin-top:8px;">差分の内容</span>
+            <textarea id="diff-desc" oninput="upd()" style="min-height:54px;"></textarea>
+          </div>
+        </div>
+
+        <div class="fld">
+          <span class="lbl">納品サイズ</span>
+          <div class="chips">
+            <div class="chip" data-v="1:1（正方形）" onclick="tog(this,'size')">1:1 正方形</div>
+            <div class="chip" data-v="3:4（縦長）" onclick="tog(this,'size')">3:4 縦長</div>
+            <div class="chip" data-v="9:16（縦長）" onclick="tog(this,'size')">9:16 縦長</div>
+            <div class="chip" data-v="16:9（横長）" onclick="tog(this,'size')">16:9 横長</div>
+            <div class="chip" data-v="A4縦" onclick="tog(this,'size')">A4縦</div>
+            <div class="chip" data-v="その他" onclick="togCond(this,'size','size-other')">その他</div>
+          </div>
+          <div id="size-other" class="cond-box" style="display:none;">
+            <span class="lbl" style="margin-top:8px;">サイズの詳細</span>
+            <input type="text" id="size-other-text" oninput="upd()">
+          </div>
+        </div>
+
+        <!-- 背景：あり/なし → ありのとき詳細欄を表示 -->
+        <div class="fld">
+          <span class="lbl">背景の有無</span>
+          <div class="chips">
+            <div class="chip" data-v="なし（透過）" onclick="tog(this,'bg')">なし（透過）</div>
+            <div class="chip" data-v="あり" onclick="tog(this,'bg')">あり</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 資料URL -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">📎</div>
+        <span class="ctitle">資料URL</span>
+        <span class="badge b-o">任意</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">ギガファイルやGoogleドライブのURLを貼ってください</span>
+          <textarea id="ref-url-text" oninput="upd()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 納品・料金 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">📦</div>
+        <span class="ctitle">納品・料金</span>
+        <span class="badge b-r">必須</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <span class="lbl">納品形式（複数OK）</span>
+          <div class="chips">
+            <div class="chip" data-v="PNG（透過あり）" onclick="tog(this,'fmt',true)">PNG（透過あり）</div>
+            <div class="chip" data-v="PNG（透過なし）" onclick="tog(this,'fmt',true)">PNG（透過なし）</div>
+            <div class="chip" data-v="JPG" onclick="tog(this,'fmt',true)">JPG</div>
+            <div class="chip" data-v="PSD（レイヤーあり）" onclick="tog(this,'fmt',true)">PSD</div>
+            <div class="chip" data-v="CLIP（クリスタデータ）" onclick="tog(this,'fmt',true)">CLIP</div>
+          </div>
+        </div>
+        <div class="fld">
+          <span class="lbl">納品希望日</span>
+          <input type="text" id="deadline" oninput="upd()">
+        </div>
+        <div class="fld">
+          <span class="lbl">予算</span>
+          <div class="chips" style="margin-bottom:6px;">
+            <div class="chip" data-v="見積り希望" onclick="togBudget(this)">見積り希望</div>
+          </div>
+          <input type="text" id="budget" oninput="upd()">
+        </div>
+      </div>
+    </div>
+
+    <!-- その他希望 -->
+    <div class="card">
+      <div class="ch">
+        <div class="ico">📝</div>
+        <span class="ctitle">その他希望</span>
+        <span class="badge b-o">任意</span>
+      </div>
+      <div class="cb">
+        <div class="fld">
+          <textarea id="other" oninput="upd()"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pane-l -->
+
+  <!-- ▼ 右：プレビュー -->
+  <div id="pane-r">
+    <div id="r-head">
+      <span id="r-label">📄 依頼文プレビュー</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="r-cnt"></span>
+        <button class="hbtn" style="background:var(--blue-mid);color:var(--blue-deep);font-size:12px;height:28px;padding:0 14px;border-radius:99px;border:none;cursor:pointer;font-family:inherit;font-weight:700;" onclick="copyText()">📋 コピー</button>
+      </div>
+    </div>
+    <div id="r-body">
+      <div id="preview"></div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<div id="toast"></div>
+
+<script>
+// === State ===
+const S = { cut:[], use:[], pose:[], costume:[], diff:[], size:[], bg:[], fmt:[] };
+
+// === チップ切替 ===
+function tog(el, group, multi=false) {
+  const v = el.dataset.v;
+  if (multi) {
+    el.classList.toggle('on');
+    if (el.classList.contains('on')) S[group].push(v);
+    else S[group] = S[group].filter(x => x !== v);
+  } else {
+    const was = el.classList.contains('on');
+    el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    if (!was) { el.classList.add('on'); S[group] = [v]; }
+    else S[group] = [];
+  }
+  upd();
+}
+
+// === 条件チップ（あり/なしで詳細欄を表示切替） ===
+function togCond(el, group, detailId) {
+  const v = el.dataset.v;
+  const was = el.classList.contains('on');
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  const detail = document.getElementById(detailId);
+  if (!was) {
+    el.classList.add('on');
+    S[group] = [v];
+    // 「なし」以外のときは詳細欄を開く
+    detail.style.display = (v !== 'なし') ? 'flex' : 'none';
+  } else {
+    S[group] = [];
+    detail.style.display = 'none';
+  }
+  upd();
+}
+
+// === 見積り希望トグル ===
+function togBudget(el) {
+  const on = el.classList.toggle('on');
+  const input = document.getElementById('budget');
+  if (on) { input.value = ''; input.disabled = true; input.style.opacity = '0.4'; }
+  else { input.disabled = false; input.style.opacity = '1'; }
+  upd();
+}
+
+function addUrlTo(listId) {
+  const list = document.getElementById(listId);
+  const row = document.createElement('div');
+  row.className = 'url-row';
+  row.innerHTML = `<input type="url" placeholder="https://..." oninput="upd()"><button class="xbtn" onclick="delUrlFrom(this,'${listId}')">×</button>`;
+  list.appendChild(row);
+}
+function delUrlFrom(btn, listId) {
+  const list = document.getElementById(listId);
+  if (list.children.length > 1) { btn.parentElement.remove(); upd(); }
+  else { btn.previousElementSibling.value = ''; upd(); }
+}
+function getUrls(listId) {
+  return [...document.querySelectorAll(`#${listId} input`)].map(i=>i.value.trim()).filter(Boolean);
+}
+
+// === 値取得 ===
+function g(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+// === プレビュー更新 ===
+function upd() {
+  const name=g('c-name'), gender=g('c-gender'), age=g('c-age'), desc=g('c-desc'),
+        myName=g('my-name'), myOrg=g('my-org'),
+        useNote=g('use-note'), poseD=g('p-detail'), costume=g('p-costume'),
+        diffDesc=g('diff-desc'),
+        sizeOther=g('size-other-text'),
+        refUrlText=g('ref-url-text'),
+        deadline=g('deadline'), budget=g('budget'), other=g('other');
+
+  const hasAny = name||gender||age||desc||S.cut.length||S.use.length||deadline||budget;
+  const box = document.getElementById('preview');
+
+  if (!hasAny) {
+    box.innerHTML = '<div class="p-empty">左のフォームを記入すると<br>ここに依頼文が自動生成されます<br><br>入力するたびリアルタイムで更新されます</div>';
+    document.getElementById('r-cnt').textContent = '';
+    return;
+  }
+
+  const L = [];
+  L.push('━━━━━━━━━━━━━━━━━━━━━━━━');
+  L.push('　　イラスト制作のご依頼');
+  L.push('━━━━━━━━━━━━━━━━━━━━━━━━');
+  L.push('');
+  L.push('お世話になります。');
+  const sender = myOrg && myName ? `${myOrg}の${myName}` : myOrg ? myOrg : myName ? myName : '○○（所属等あれば）の○○（名前）';
+  L.push(`${sender}と申します。`);
+  L.push('以下の内容でイラストのご依頼をさせていただきたいです。');
+  L.push('');
+
+  // キャラクター詳細
+  L.push('▼ キャラクターの詳細');
+  if (name)   L.push(`  名前　：${name}`);
+  if (gender) L.push(`  性別　：${gender}`);
+  if (age)    L.push(`  年齢　：${age}`);
+  if (desc)   L.push(`  設定　：${desc}`);
+  L.push('');
+
+  // 使用用途
+  L.push('▼ 使用用途');
+  if (S.use.length) L.push(`  用途　：${S.use.join('、')}`);
+  if (useNote)      L.push(`  補足　：${useNote}`);
+  if (!S.use.length && !useNote) L.push('  （記載なし）');
+  L.push('');
+
+  // イラスト構図
+  L.push('▼ イラスト構図');
+  if (S.cut.length)  L.push(`  カット：${S.cut.join('、')}`);
+  if (S.pose.length) {
+    const poseVal = S.pose[0] === 'あり' ? `あり${poseD ? '（' + poseD + '）' : ''}` : 'なし';
+    L.push(`  ポーズ：${poseVal}`);
+  }
+  if (S.costume.length) {
+    const costumeVal = S.costume[0] === 'あり' ? `あり${costume ? '（' + costume + '）' : ''}` : 'なし';
+    L.push(`  衣装　：${costumeVal}`);
+  }
+  if (S.diff.length) {
+    const diffVal = S.diff[0] === 'あり' ? `あり${diffDesc ? '（' + diffDesc + '）' : ''}` : 'なし';
+    L.push(`  表情差分：${diffVal}`);
+  }
+  if (S.size.length) {
+    const sizeVal = S.size[0] === 'その他' ? `その他${sizeOther ? '（' + sizeOther + '）' : ''}` : S.size.join('、');
+    L.push(`  納品サイズ：${sizeVal}`);
+  }
+  if (S.bg.length) {
+    L.push(`  背景　：${S.bg[0]}`);
+  }
+  L.push('');
+
+  // 納品・料金
+  L.push('▼ 納品・料金');
+  if (S.fmt.length) L.push(`  納品形式：${S.fmt.join('、')}`);
+  if (deadline)     L.push(`  納品希望日：${deadline}`);
+  const budgetChip = document.querySelector('.chip[data-v="見積り希望"]');
+  const budgetVal = budgetChip?.classList.contains('on') ? '見積り希望' : budget;
+  if (budgetVal) L.push(`  予算　：${budgetVal}`);
+  L.push('');
+
+  if (refUrlText) {
+    L.push('▼ 資料URL');
+    L.push(`  ${refUrlText.replace(/\n/g,'\n  ')}`);
+    L.push('');
+  }
+
+  // その他希望
+  if (other) {
+    L.push('▼ その他希望');
+    L.push(`  ${other.replace(/\n/g,'\n  ')}`);
+    L.push('');
+  }
+
+  L.push('━━━━━━━━━━━━━━━━━━━━━━━━');
+  L.push('ご不明な点があれば、お気軽にお申し付けください。');
+  L.push('よろしくお願いいたします。');
+
+  const text = L.join('\n');
+  box.textContent = text;
+  document.getElementById('r-cnt').textContent = `${text.length}文字`;
+}
+
+// === コピー ===
+function copyText() {
+  const text = document.getElementById('preview').textContent || '';
+  if (!text || document.querySelector('.p-empty')) {
+    toast('⚠ まず依頼内容を入力してください', 'ng'); return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    toast('📋 コピーしました！', 'ok');
+  }).catch(() => {
+    toast('コピーに失敗しました', 'ng');
+  });
+}
+
+// === 保存 ===
+function saveFile() {
+  const text = document.getElementById('preview').textContent || '';
+  if (!text || document.querySelector('.p-empty')) {
+    toast('⚠ まず依頼内容を入力してください','ng'); return;
+  }
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  const d = new Date();
+  const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `イラスト依頼文_${ds}.txt`;
+  a.click();
+  toast('💾 保存しました！','ok');
+}
+
+// === クリア ===
+function clearAll() {
+  if (!confirm('全ての入力をリセットしますか？')) return;
+  document.querySelectorAll('input[type=text],input[type=url],textarea').forEach(e=>e.value='');
+  document.querySelectorAll('.chip.on').forEach(c=>c.classList.remove('on'));
+  Object.keys(S).forEach(k=>S[k]=[]);
+  document.getElementById('diff-detail').style.display = 'none';
+  const bi = document.getElementById('budget');
+  bi.disabled = false; bi.style.opacity = '1';
+  document.getElementById('size-other').style.display = 'none';
+  document.getElementById('pose-detail').style.display = 'none';
+  document.getElementById('costume-detail').style.display = 'none';
+  ['char-url-list','ref-url-list'].forEach(id => {
+    const ul = document.getElementById(id);
+    while (ul.children.length > 1) ul.lastChild.remove();
+    ul.querySelector('input').value = '';
+  });
+  upd();
+}
+
+// === トースト ===
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `${type} show`;
+  setTimeout(()=>t.className='', 3000);
+}
+
+upd();
+</script>
+</body>
+</html>
