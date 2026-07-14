@@ -210,7 +210,7 @@ export default function About() {
               {[
                 { label: '身長', value: '157cm' },
                 { label: '誕生日', value: '11月12日' },
-                { label: '好きな食べ物', value: 'パイナップル、ポップコーン' }
+                { label: '好きな食べ物', value: 'パイナップル、\nポップコーン' }
                 { label: '好きなこと', value: 'おしゃべり、演技、演出、ゲーム' },
               ].map((item, i) => (
                 <motion.div
